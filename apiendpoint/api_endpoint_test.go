@@ -15,8 +15,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/require"
 
+	"github.com/riverqueue/apiframe/apierror"
 	"github.com/riverqueue/river/rivershared/riversharedtest"
-	"github.com/riverqueue/riverapiframe/apierror"
 )
 
 func TestMountAndServe(t *testing.T) {

@@ -16,8 +16,8 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/riverqueue/riverapiframe/apierror"
-	"github.com/riverqueue/riverapiframe/internal/validate"
+	"github.com/riverqueue/apiframe/apierror"
+	"github.com/riverqueue/apiframe/internal/validate"
 )
 
 // Endpoint is a struct that should be embedded on an API endpoint, and which
