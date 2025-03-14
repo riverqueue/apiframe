@@ -34,10 +34,11 @@ func TestMountAndServe(t *testing.T) {
 		var (
 			logger = riversharedtest.Logger(t)
 			mux    = http.NewServeMux()
+			opts   = &MountOpts{Logger: logger}
 		)
 
-		Mount(mux, logger, &getEndpoint{})
-		Mount(mux, logger, &postEndpoint{})
+		Mount(mux, &getEndpoint{}, opts)
+		Mount(mux, &postEndpoint{}, opts)
 
 		return mux, &testBundle{
 			recorder: httptest.NewRecorder(),
