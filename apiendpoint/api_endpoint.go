@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/riverqueue/apiframe/apierror"
+	"github.com/riverqueue/apiframe/apimiddleware"
 	"github.com/riverqueue/apiframe/internal/validate"
 )
 
@@ -87,18 +88,40 @@ func (m *EndpointMeta) validate() {
 	}
 }
 
+type MountOpts struct {
+	Logger *slog.Logger
+	// MiddlewareStack is a stack of middleware that will be mounted in front of
+	// the API endpoint handler. If not specified, no middleware will be used.
+	MiddlewareStack *apimiddleware.MiddlewareStack
+}
+
 // Mount mounts an endpoint to a Go http.ServeMux. The logger is used to log
 // information about endpoint execution.
-func Mount[TReq any, TResp any](mux *http.ServeMux, logger *slog.Logger, apiEndpoint EndpointExecuteInterface[TReq, TResp]) EndpointInterface {
+func Mount[TReq any, TResp any](mux *http.ServeMux, apiEndpoint EndpointExecuteInterface[TReq, TResp], opts *MountOpts) EndpointInterface {
+	if opts == nil {
+		opts = &MountOpts{}
+	}
+
+	logger := opts.Logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
 	apiEndpoint.SetLogger(logger)
 
 	meta := apiEndpoint.Meta()
 	meta.validate() // panic on problem
 	apiEndpoint.SetMeta(meta)
 
-	mux.HandleFunc(meta.Pattern, func(w http.ResponseWriter, r *http.Request) {
-		executeAPIEndpoint(w, r, logger, meta, apiEndpoint.Execute)
-	})
+	innerHandler := func(w http.ResponseWriter, r *http.Request) {
+		executeAPIEndpoint(w, r, opts.Logger, meta, apiEndpoint.Execute)
+	}
+
+	if opts.MiddlewareStack != nil {
+		mux.Handle(meta.Pattern, opts.MiddlewareStack.Mount(http.HandlerFunc(innerHandler)))
+	} else {
+		mux.HandleFunc(meta.Pattern, innerHandler)
+	}
 
 	return apiEndpoint
 }
