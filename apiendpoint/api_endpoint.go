@@ -139,6 +139,10 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 		if r.Method != http.MethodGet {
 			reqData, err := io.ReadAll(r.Body)
 			if err != nil {
+				var maxBytesErr *http.MaxBytesError
+				if errors.As(err, &maxBytesErr) {
+					return apierror.NewRequestEntityTooLarge("Request entity too large.")
+				}
 				return fmt.Errorf("error reading request body: %w", err)
 			}
 
