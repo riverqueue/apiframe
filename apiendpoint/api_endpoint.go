@@ -4,6 +4,7 @@
 package apiendpoint
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -146,6 +147,8 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 					return apierror.NewBadRequestf("Error unmarshaling request body: %s.", err)
 				}
 			}
+
+			r.Body = io.NopCloser(bytes.NewReader(reqData))
 		}
 
 		if rawExtractor, ok := any(&req).(RawExtractor); ok {
