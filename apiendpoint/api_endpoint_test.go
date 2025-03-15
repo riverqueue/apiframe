@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,6 +26,7 @@ func TestMountAndServe(t *testing.T) {
 	ctx := context.Background()
 
 	type testBundle struct {
+		logger   *slog.Logger
 		recorder *httptest.ResponseRecorder
 	}
 
@@ -34,12 +36,14 @@ func TestMountAndServe(t *testing.T) {
 		var (
 			logger = riversharedtest.Logger(t)
 			mux    = http.NewServeMux()
+			opts   = &MountOpts{Logger: logger}
 		)
 
-		Mount(mux, logger, &getEndpoint{})
-		Mount(mux, logger, &postEndpoint{})
+		Mount(mux, &getEndpoint{}, opts)
+		Mount(mux, &postEndpoint{}, opts)
 
 		return mux, &testBundle{
+			logger:   logger,
 			recorder: httptest.NewRecorder(),
 		}
 	}
@@ -77,6 +81,36 @@ func TestMountAndServe(t *testing.T) {
 
 		// This error comes from net/http.
 		requireStatusAndResponse(t, http.StatusMethodNotAllowed, "Method Not Allowed\n", bundle.recorder)
+	})
+
+	t.Run("NilOptions", func(t *testing.T) {
+		t.Parallel()
+
+		_, bundle := setup(t)
+
+		mux := http.NewServeMux()
+		Mount(mux, &postEndpoint{}, nil)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint",
+			bytes.NewBuffer(mustMarshalJSON(t, &postRequest{Message: "Hello."})))
+		mux.ServeHTTP(bundle.recorder, req)
+
+		requireStatusAndJSONResponse(t, http.StatusCreated, &postResponse{Message: "Hello."}, bundle.recorder)
+	})
+
+	t.Run("OptionsWithCustomLogger", func(t *testing.T) {
+		t.Parallel()
+
+		_, bundle := setup(t)
+
+		mux := http.NewServeMux()
+		Mount(mux, &postEndpoint{}, &MountOpts{Logger: bundle.logger})
+
+		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint",
+			bytes.NewBuffer(mustMarshalJSON(t, &postRequest{Message: "Hello."})))
+		mux.ServeHTTP(bundle.recorder, req)
+
+		requireStatusAndJSONResponse(t, http.StatusCreated, &postResponse{Message: "Hello."}, bundle.recorder)
 	})
 
 	t.Run("PostEndpoint", func(t *testing.T) {
