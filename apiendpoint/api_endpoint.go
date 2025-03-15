@@ -11,6 +11,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgerrcode"
@@ -68,6 +69,11 @@ type EndpointExecuteInterface[TReq any, TResp any] interface {
 
 // EndpointMeta is metadata about an API endpoint.
 type EndpointMeta struct {
+	// MaxBodyBytes is the maximum number of bytes that can be read from the
+	// request body. If the request body exceeds this number, a 413 error will
+	// be returned.
+	MaxBodyBytes int64
+
 	// Pattern is the API endpoint's HTTP method and path where it should be
 	// mounted, which is passed to http.ServeMux by Mount. It should start with
 	// a verb like `GET` or `POST`, and may contain Go 1.22 path variables like
@@ -136,8 +142,15 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 	err := func() error {
 		var req TReq
 		if r.Method != http.MethodGet {
+			if meta.MaxBodyBytes > 0 {
+				r.Body = http.MaxBytesReader(w, r.Body, meta.MaxBodyBytes)
+			}
+
 			reqData, err := io.ReadAll(r.Body)
 			if err != nil {
+				if strings.Contains(err.Error(), "request body too large") {
+					return apierror.NewRequestEntityTooLarge("Request entity too large")
+				}
 				return fmt.Errorf("error reading request body: %w", err)
 			}
 

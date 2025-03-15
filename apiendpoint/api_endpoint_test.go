@@ -71,6 +71,28 @@ func TestMountAndServe(t *testing.T) {
 		requireStatusAndJSONResponse(t, http.StatusOK, &postResponse{Message: "Hello."}, bundle.recorder)
 	})
 
+	t.Run("MaxBodyBytes", func(t *testing.T) {
+		t.Parallel()
+
+		_, bundle := setup(t)
+
+		payload := mustMarshalJSON(t, &postRequest{Message: "Hello."})
+
+		mux := http.NewServeMux()
+		endpoint := &postEndpoint{MaxBodyBytes: int64(len(payload))}
+		Mount(mux, endpoint, &MountOpts{Logger: bundle.logger})
+
+		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint", bytes.NewBuffer(payload))
+		mux.ServeHTTP(bundle.recorder, req)
+		requireStatusAndResponse(t, http.StatusCreated, `{"message":"Hello."}`, bundle.recorder)
+
+		bundle.recorder = httptest.NewRecorder()
+		payload = mustMarshalJSON(t, &postRequest{Message: "Hello!!"}) // one longer than previous payload
+		req = httptest.NewRequest(http.MethodPost, "/api/post-endpoint", bytes.NewBuffer(payload))
+		mux.ServeHTTP(bundle.recorder, req)
+		requireStatusAndJSONResponse(t, http.StatusRequestEntityTooLarge, &apierror.APIError{Message: "Request entity too large"}, bundle.recorder)
+	})
+
 	t.Run("MethodNotAllowed", func(t *testing.T) {
 		t.Parallel()
 
@@ -308,12 +330,14 @@ func (a *getEndpoint) Execute(_ context.Context, req *getRequest) (*getResponse,
 
 type postEndpoint struct {
 	Endpoint[postRequest, postResponse]
+	MaxBodyBytes int64
 }
 
-func (*postEndpoint) Meta() *EndpointMeta {
+func (a *postEndpoint) Meta() *EndpointMeta {
 	return &EndpointMeta{
-		Pattern:    "POST /api/post-endpoint",
-		StatusCode: http.StatusCreated,
+		MaxBodyBytes: a.MaxBodyBytes,
+		Pattern:      "POST /api/post-endpoint",
+		StatusCode:   http.StatusCreated,
 	}
 }
 

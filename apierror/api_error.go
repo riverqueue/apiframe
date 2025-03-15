@@ -132,6 +132,23 @@ func NewNotFoundf(format string, a ...any) *NotFound {
 }
 
 //
+// RequestEntityTooLarge
+//
+
+type RequestEntityTooLarge struct { //nolint:errname
+	APIError
+}
+
+func NewRequestEntityTooLarge(message string) *RequestEntityTooLarge {
+	return &RequestEntityTooLarge{
+		APIError: APIError{
+			Message:    message,
+			StatusCode: http.StatusRequestEntityTooLarge,
+		},
+	}
+}
+
+//
 // ServiceUnavailable
 //
 
