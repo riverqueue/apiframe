@@ -168,3 +168,20 @@ func NewServiceUnavailable(message string) *ServiceUnavailable {
 func NewServiceUnavailablef(format string, a ...any) *ServiceUnavailable {
 	return NewServiceUnavailable(fmt.Sprintf(format, a...))
 }
+
+//
+// Unauthorized
+//
+
+type Unauthorized struct { //nolint:errname
+	APIError
+}
+
+func NewUnauthorized(format string, a ...any) *Unauthorized {
+	return &Unauthorized{
+		APIError: APIError{
+			Message:    fmt.Sprintf(format, a...),
+			StatusCode: http.StatusUnauthorized,
+		},
+	}
+}
