@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/riverqueue/apiframe/apiendpoint"
 	"github.com/riverqueue/apiframe/apierror"
 	"github.com/riverqueue/apiframe/internal/validate"
 )
@@ -21,11 +22,20 @@ import (
 // Sample invocation:
 //
 //	endpoint := &testEndpoint{}
-//	resp, err := apitest.InvokeHandler(ctx, endpoint.Execute, &testRequest{ReqField: "string"})
+//	resp, err := apitest.InvokeHandler(ctx, endpoint.Execute, nil, &testRequest{ReqField: "string"})
 //	require.NoError(t, err)
-func InvokeHandler[TReq any, TResp any](ctx context.Context, handler func(context.Context, *TReq) (*TResp, error), req *TReq) (*TResp, error) {
-	if err := validate.StructCtx(ctx, req); err != nil {
-		return nil, apierror.NewBadRequest(validate.PublicFacingMessage(err))
+func InvokeHandler[TReq any, TResp any](ctx context.Context, handler func(context.Context, *TReq) (*TResp, error), opts *apiendpoint.MountOpts, req *TReq) (*TResp, error) {
+	if opts == nil {
+		opts = &apiendpoint.MountOpts{}
+	}
+
+	validator := opts.Validator
+	if validator == nil {
+		validator = validate.Default
+	}
+
+	if err := validator.StructCtx(ctx, req); err != nil {
+		return nil, apierror.NewBadRequest(validate.PublicFacingMessage(validator, err))
 	}
 
 	resp, err := handler(ctx, req)
@@ -33,7 +43,7 @@ func InvokeHandler[TReq any, TResp any](ctx context.Context, handler func(contex
 		return nil, err
 	}
 
-	if err := validate.StructCtx(ctx, resp); err != nil {
+	if err := validator.StructCtx(ctx, resp); err != nil {
 		return nil, fmt.Errorf("apitest: error validating response API resource: %w", err)
 	}
 
