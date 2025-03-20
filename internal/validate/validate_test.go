@@ -4,11 +4,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFromValidator(t *testing.T) {
 	t.Parallel()
+
+	validator := validator.New(validator.WithRequiredStructEnabled())
+	validator.RegisterTagNameFunc(preferPublicName)
 
 	// Fields have JSON tags so we can verify those are used over the
 	// property name.
@@ -43,7 +47,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.MaxInt = 1
-		require.Equal(t, "Field `max_int` must be less than or equal to 0.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `max_int` must be less than or equal to 0.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("MaxSlice", func(t *testing.T) {
@@ -51,7 +55,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.MaxSlice = []string{"1"}
-		require.Equal(t, "Field `max_slice` must contain at most 0 element(s).", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `max_slice` must contain at most 0 element(s).", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("MaxString", func(t *testing.T) {
@@ -59,7 +63,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.MaxString = "value"
-		require.Equal(t, "Field `max_string` must be at most 0 character(s) long.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `max_string` must be at most 0 character(s) long.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("MinInt", func(t *testing.T) {
@@ -67,7 +71,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.MinInt = 0
-		require.Equal(t, "Field `min_int` must be greater or equal to 1.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `min_int` must be greater or equal to 1.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("MinSlice", func(t *testing.T) {
@@ -75,7 +79,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.MinSlice = nil
-		require.Equal(t, "Field `min_slice` must contain at least 1 element(s).", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `min_slice` must contain at least 1 element(s).", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("MinString", func(t *testing.T) {
@@ -83,7 +87,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.MinString = ""
-		require.Equal(t, "Field `min_string` must be at least 1 character(s) long.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `min_string` must be at least 1 character(s) long.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("OneOf", func(t *testing.T) {
@@ -91,7 +95,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.OneOf = "red"
-		require.Equal(t, "Field `one_of` should be one of the following values: blue green.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `one_of` should be one of the following values: blue green.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("Required", func(t *testing.T) {
@@ -99,7 +103,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.Required = ""
-		require.Equal(t, "Field `required` is required.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `required` is required.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("Unsupported", func(t *testing.T) {
@@ -107,7 +111,7 @@ func TestFromValidator(t *testing.T) {
 
 		testStruct := validTestStruct()
 		testStruct.Unsupported = "abc"
-		require.Equal(t, "Validation on field `unsupported` failed on the `e164` tag.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Validation on field `unsupported` failed on the `e164` tag.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 
 	t.Run("MultipleErrors", func(t *testing.T) {
@@ -116,7 +120,7 @@ func TestFromValidator(t *testing.T) {
 		testStruct := validTestStruct()
 		testStruct.MinInt = 0
 		testStruct.Required = ""
-		require.Equal(t, "Field `min_int` must be greater or equal to 1. Field `required` is required.", PublicFacingMessage(validate.Struct(testStruct)))
+		require.Equal(t, "Field `min_int` must be greater or equal to 1. Field `required` is required.", PublicFacingMessage(validator, validator.Struct(testStruct)))
 	})
 }
 

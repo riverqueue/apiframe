@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 
@@ -94,6 +95,9 @@ type MountOpts struct {
 	// MiddlewareStack is a stack of middleware that will be mounted in front of
 	// the API endpoint handler. If not specified, no middleware will be used.
 	MiddlewareStack *apimiddleware.MiddlewareStack
+	// Validator is the validator to use for this endpoint. If not specified,
+	// the default validator will be used.
+	Validator *validator.Validate
 }
 
 // Mount mounts an endpoint to a Go http.ServeMux. The logger is used to log
@@ -108,6 +112,11 @@ func Mount[TReq any, TResp any](mux *http.ServeMux, apiEndpoint EndpointExecuteI
 		logger = slog.Default()
 	}
 
+	validator := opts.Validator
+	if validator == nil {
+		validator = validate.Default
+	}
+
 	apiEndpoint.SetLogger(logger)
 
 	meta := apiEndpoint.Meta()
@@ -115,7 +124,7 @@ func Mount[TReq any, TResp any](mux *http.ServeMux, apiEndpoint EndpointExecuteI
 	apiEndpoint.SetMeta(meta)
 
 	innerHandler := func(w http.ResponseWriter, r *http.Request) {
-		executeAPIEndpoint(w, r, opts.Logger, meta, apiEndpoint.Execute)
+		executeAPIEndpoint(w, r, opts.Logger, meta, validator, apiEndpoint.Execute)
 	}
 
 	if opts.MiddlewareStack != nil {
@@ -127,13 +136,10 @@ func Mount[TReq any, TResp any](mux *http.ServeMux, apiEndpoint EndpointExecuteI
 	return apiEndpoint
 }
 
-func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Request, logger *slog.Logger, meta *EndpointMeta, execute func(ctx context.Context, req *TReq) (*TResp, error)) {
+func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Request, logger *slog.Logger, meta *EndpointMeta, validator *validator.Validate, execute func(ctx context.Context, req *TReq) (*TResp, error)) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	// Run as much code as we can in a sub-function that can return an error.
-	// This is more convenient to write, but is also safer because unlike when
-	// writing errors to ResponseWriter, there's no danger of a missing return.
 	err := func() error {
 		var req TReq
 		if r.Method != http.MethodGet {
@@ -161,8 +167,8 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 			}
 		}
 
-		if err := validate.StructCtx(ctx, &req); err != nil {
-			return apierror.NewBadRequest(validate.PublicFacingMessage(err))
+		if err := validator.StructCtx(ctx, &req); err != nil {
+			return apierror.NewBadRequest(validate.PublicFacingMessage(validator, err))
 		}
 
 		resp, err := execute(ctx, &req)

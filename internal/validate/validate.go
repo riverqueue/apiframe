@@ -4,7 +4,6 @@
 package validate
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -12,11 +11,12 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// WithRequiredStructEnabled can be removed once validator/v11 is released.
-var validate = validator.New(validator.WithRequiredStructEnabled()) //nolint:gochecknoglobals
+// Default is the package's default validator instance. WithRequiredStructEnabled
+// can be removed once validator/v11 is released.
+var Default = validator.New(validator.WithRequiredStructEnabled()) //nolint:gochecknoglobals
 
 func init() { //nolint:gochecknoinits
-	validate.RegisterTagNameFunc(preferPublicName)
+	Default.RegisterTagNameFunc(preferPublicName)
 }
 
 // PublicFacingMessage builds a complete error message from a validator error
@@ -24,7 +24,7 @@ func init() { //nolint:gochecknoinits
 //
 // I only added a few possible validations to start. We'll probably need to add
 // more as we go and expand our usage.
-func PublicFacingMessage(validatorErr error) string {
+func PublicFacingMessage(v *validator.Validate, validatorErr error) string {
 	var message string
 
 	//nolint:errorlint
@@ -95,13 +95,6 @@ func PublicFacingMessage(validatorErr error) string {
 	}
 
 	return strings.TrimSpace(message)
-}
-
-// StructCtx validates a structs exposed fields, and automatically validates
-// nested structs, unless otherwise specified and also allows passing of
-// context.Context for contextual validation information.
-func StructCtx(ctx context.Context, s any) error {
-	return validate.StructCtx(ctx, s)
 }
 
 // preferPublicName is a validator tag naming function that uses public names
