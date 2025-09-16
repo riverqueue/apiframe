@@ -19,6 +19,7 @@ func TestInvokeHandler(t *testing.T) {
 	type testRequest struct {
 		RequiredReqField string `json:"req_field" validate:"required"`
 	}
+
 	type testResponse struct {
 		RequiredRespField string `json:"resp_field" validate:"required"`
 	}

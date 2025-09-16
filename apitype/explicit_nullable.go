@@ -42,5 +42,6 @@ func ExtractExplicitNullableValueForValidation[T any](field reflect.Value) inter
 	if !ok || !ps.Set || ps.Value == nil {
 		return nil
 	}
+
 	return ps.Value
 }

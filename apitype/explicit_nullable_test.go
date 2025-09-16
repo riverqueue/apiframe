@@ -56,6 +56,7 @@ func TestExplicitNullable_Validation(t *testing.T) {
 			t.Parallel()
 
 			var payload testPayload
+
 			err := json.Unmarshal([]byte(tt.json), &payload)
 			require.NoError(t, err)
 
@@ -104,6 +105,7 @@ func TestExtractExplicitNullableValueForValidation(t *testing.T) {
 			t.Parallel()
 
 			val := reflect.ValueOf(tt.input)
+
 			got := ExtractExplicitNullableValueForValidation[string](val)
 			if tt.wantVal == nil {
 				require.Nil(t, got)
@@ -159,6 +161,7 @@ func TestExplicitNullable_UnmarshalJSON(t *testing.T) {
 			t.Parallel()
 
 			var got testPayload
+
 			err := json.Unmarshal([]byte(tt.json), &got)
 
 			if tt.wantErr {
