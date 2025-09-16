@@ -245,6 +245,7 @@ func mustMarshalJSON(t *testing.T, v any) []byte {
 
 	data, err := json.Marshal(v)
 	require.NoError(t, err)
+
 	return data
 }
 
@@ -252,8 +253,10 @@ func mustUnmarshalJSON[T any](t *testing.T, data []byte) *T {
 	t.Helper()
 
 	var val T
+
 	err := json.Unmarshal(data, &val)
 	require.NoError(t, err)
+
 	return &val
 }
 
@@ -315,6 +318,7 @@ func (a *getEndpoint) Execute(_ context.Context, req *getRequest) (*getResponse,
 
 type postEndpoint struct {
 	Endpoint[postRequest, postResponse]
+
 	MaxBodyBytes int64
 }
 
@@ -341,6 +345,7 @@ func (req *postRequest) ExtractRaw(r *http.Request) error {
 	}
 
 	req.ID = r.PathValue("id")
+
 	return nil
 }
 

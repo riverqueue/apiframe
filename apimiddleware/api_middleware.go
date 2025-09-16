@@ -56,6 +56,7 @@ func NewMiddlewareStack(middlewares ...middlewareInterface) *MiddlewareStack {
 	for _, mw := range middlewares {
 		stack.Use(mw)
 	}
+
 	return stack
 }
 
@@ -63,6 +64,7 @@ func (s *MiddlewareStack) Mount(handler http.Handler) http.Handler {
 	for i := len(s.middlewares) - 1; i >= 0; i-- {
 		handler = s.middlewares[i].Middleware(handler)
 	}
+
 	return handler
 }
 

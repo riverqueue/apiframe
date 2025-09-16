@@ -34,6 +34,7 @@ func (m *contextTrailMiddleware) Middleware(next http.Handler) http.Handler {
 		if existingTrail, ok := ctx.Value(contextTrailContextKey{}).([]string); ok {
 			contextTrail = existingTrail
 		}
+
 		contextTrail = append(contextTrail, m.segment)
 
 		next.ServeHTTP(w, r.WithContext(context.WithValue(ctx, contextTrailContextKey{}, contextTrail)))

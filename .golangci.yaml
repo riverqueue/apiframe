@@ -25,6 +25,7 @@ linters:
     - ireturn # bans returning interfaces; questionable as is, but also buggy as hell; very, very annoying
     - lll # restricts maximum line length; annoying
     - nlreturn # requires a blank line before returns; annoying
+    - noinlineerr # disallows `if err := ...`; because why miss an opportunity to leak variables out of scope?
     - wsl # a bunch of style/whitespace stuff; annoying
 
   settings:

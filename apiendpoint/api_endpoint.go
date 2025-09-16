@@ -85,6 +85,7 @@ func (m *EndpointMeta) validate() {
 	if m.Pattern == "" {
 		panic("Endpoint.Path is required")
 	}
+
 	if m.StatusCode == 0 {
 		panic("Endpoint.StatusCode is required")
 	}
@@ -142,6 +143,7 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 
 	err := func() error {
 		var req TReq
+
 		if r.Method != http.MethodGet {
 			reqData, err := io.ReadAll(r.Body)
 			if err != nil {
@@ -149,6 +151,7 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 				if errors.As(err, &maxBytesErr) {
 					return apierror.NewRequestEntityTooLarge("Request entity too large.")
 				}
+
 				return fmt.Errorf("error reading request body: %w", err)
 			}
 
@@ -213,12 +216,14 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 			logger.InfoContext(ctx, "API error response", logAttrs...)
 
 			apiErr.Write(ctx, logger, w)
+
 			return
 		}
 
 		if errors.Is(err, context.DeadlineExceeded) {
 			logger.ErrorContext(ctx, "request timeout", slog.String("error", err.Error()))
 			apierror.NewServiceUnavailable("Request timed out. Retrying the request might work.").Write(ctx, logger, w)
+
 			return
 		}
 
