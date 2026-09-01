@@ -25,7 +25,7 @@ func init() { //nolint:gochecknoinits
 // I only added a few possible validations to start. We'll probably need to add
 // more as we go and expand our usage.
 func PublicFacingMessage(v *validator.Validate, validatorErr error) string {
-	var message string
+	var message strings.Builder
 
 	//nolint:errorlint
 	if validationErrs, ok := validatorErr.(validator.ValidationErrors); ok {
@@ -35,66 +35,66 @@ func PublicFacingMessage(v *validator.Validate, validatorErr error) string {
 				fallthrough // lte and max are synonyms
 			case "max":
 				kind := fieldErr.Kind()
-				if kind == reflect.Ptr {
+				if kind == reflect.Pointer {
 					kind = fieldErr.Type().Elem().Kind()
 				}
 
 				switch kind { //nolint:exhaustive
 				case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int32, reflect.Int64:
-					message += fmt.Sprintf(" Field `%s` must be less than or equal to %s.",
+					fmt.Fprintf(&message, " Field `%s` must be less than or equal to %s.",
 						fieldErr.Field(), fieldErr.Param())
 
 				case reflect.Slice, reflect.Map:
-					message += fmt.Sprintf(" Field `%s` must contain at most %s element(s).",
+					fmt.Fprintf(&message, " Field `%s` must contain at most %s element(s).",
 						fieldErr.Field(), fieldErr.Param())
 
 				case reflect.String:
-					message += fmt.Sprintf(" Field `%s` must be at most %s character(s) long.",
+					fmt.Fprintf(&message, " Field `%s` must be at most %s character(s) long.",
 						fieldErr.Field(), fieldErr.Param())
 
 				default:
-					message += fieldErr.Error()
+					message.WriteString(fieldErr.Error())
 				}
 
 			case "gte":
 				fallthrough // gte and min are synonyms
 			case "min":
 				kind := fieldErr.Kind()
-				if kind == reflect.Ptr {
+				if kind == reflect.Pointer {
 					kind = fieldErr.Type().Elem().Kind()
 				}
 
 				switch kind { //nolint:exhaustive
 				case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int32, reflect.Int64:
-					message += fmt.Sprintf(" Field `%s` must be greater or equal to %s.",
+					fmt.Fprintf(&message, " Field `%s` must be greater or equal to %s.",
 						fieldErr.Field(), fieldErr.Param())
 
 				case reflect.Slice, reflect.Map:
-					message += fmt.Sprintf(" Field `%s` must contain at least %s element(s).",
+					fmt.Fprintf(&message, " Field `%s` must contain at least %s element(s).",
 						fieldErr.Field(), fieldErr.Param())
 
 				case reflect.String:
-					message += fmt.Sprintf(" Field `%s` must be at least %s character(s) long.",
+					fmt.Fprintf(&message, " Field `%s` must be at least %s character(s) long.",
 						fieldErr.Field(), fieldErr.Param())
 
 				default:
-					message += fieldErr.Error()
+					message.WriteString(fieldErr.Error())
 				}
 
 			case "oneof":
-				message += fmt.Sprintf(" Field `%s` should be one of the following values: %s.",
+				fmt.Fprintf(&message, " Field `%s` should be one of the following values: %s.",
 					fieldErr.Field(), fieldErr.Param())
 
 			case "required":
-				message += fmt.Sprintf(" Field `%s` is required.", fieldErr.Field())
+				fmt.Fprintf(&message, " Field `%s` is required.", fieldErr.Field())
 
 			default:
-				message += fmt.Sprintf(" Validation on field `%s` failed on the `%s` tag.", fieldErr.Field(), fieldErr.Tag())
+				fmt.Fprintf(&message, " Validation on field `%s` failed on the `%s` tag.", fieldErr.Field(), fieldErr.Tag())
 			}
 		}
 	}
 
-	return strings.TrimSpace(message)
+	return strings.TrimSpace(message.String())
 }
 
 // preferPublicName is a validator tag naming function that uses public names

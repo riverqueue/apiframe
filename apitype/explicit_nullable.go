@@ -37,8 +37,8 @@ func (ps *ExplicitNullable[T]) UnmarshalJSON(data []byte) error {
 // empty strings.
 //
 // This function is designed to be used with validator.RegisterCustomTypeFunc.
-func ExtractExplicitNullableValueForValidation[T any](field reflect.Value) interface{} {
-	ps, ok := field.Interface().(ExplicitNullable[T])
+func ExtractExplicitNullableValueForValidation[T any](field reflect.Value) any {
+	ps, ok := reflect.TypeAssert[ExplicitNullable[T]](field)
 	if !ok || !ps.Set || ps.Value == nil {
 		return nil
 	}

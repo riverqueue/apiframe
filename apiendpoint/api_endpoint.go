@@ -147,8 +147,7 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 		if r.Method != http.MethodGet {
 			reqData, err := io.ReadAll(r.Body)
 			if err != nil {
-				var maxBytesErr *http.MaxBytesError
-				if errors.As(err, &maxBytesErr) {
+				if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
 					return apierror.NewRequestEntityTooLarge("Request entity too large.")
 				}
 
@@ -202,8 +201,7 @@ func executeAPIEndpoint[TReq any, TResp any](w http.ResponseWriter, r *http.Requ
 		// user-friendly than an internal server error.
 		err = maybeInterpretInternalError(err)
 
-		var apiErr apierror.Interface
-		if errors.As(err, &apiErr) {
+		if apiErr, ok := errors.AsType[apierror.Interface](err); ok {
 			logAttrs := []any{
 				slog.String("error", apiErr.Error()),
 			}

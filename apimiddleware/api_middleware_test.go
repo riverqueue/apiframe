@@ -52,7 +52,7 @@ func TestMiddlewareStack(t *testing.T) {
 		}))
 
 		recorder := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
 		handler.ServeHTTP(recorder, req)
 
 		return contextTrail

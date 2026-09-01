@@ -54,7 +54,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodGet, "/api/get-endpoint", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/get-endpoint", nil)
 		mux.ServeHTTP(bundle.recorder, req)
 
 		requireStatusAndJSONResponse(t, http.StatusOK, &getResponse{Message: "Hello."}, bundle.recorder)
@@ -65,7 +65,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodGet, "/api/get-endpoint",
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/get-endpoint",
 			bytes.NewBuffer(mustMarshalJSON(t, &getRequest{IgnoredJSONMessage: "Ignored hello."})))
 		mux.ServeHTTP(bundle.recorder, req)
 
@@ -79,7 +79,7 @@ func TestMountAndServe(t *testing.T) {
 
 		payload := mustMarshalJSON(t, &postRequest{Message: "Hello."})
 
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123", bytes.NewBuffer(payload))
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123", bytes.NewBuffer(payload))
 		req.Body = http.MaxBytesReader(bundle.recorder, io.NopCloser(bytes.NewReader(payload)), int64(len(payload)-1))
 		mux.ServeHTTP(bundle.recorder, req)
 		requireStatusAndJSONResponse(t, http.StatusRequestEntityTooLarge, &apierror.APIError{Message: "Request entity too large."}, bundle.recorder)
@@ -90,7 +90,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/get-endpoint", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/get-endpoint", nil)
 		mux.ServeHTTP(bundle.recorder, req)
 
 		// This error comes from net/http.
@@ -106,7 +106,7 @@ func TestMountAndServe(t *testing.T) {
 		Mount(mux, &postEndpoint{}, nil)
 
 		reqPayload := mustMarshalJSON(t, &postRequest{Message: "Hello."})
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123", bytes.NewBuffer(reqPayload))
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123", bytes.NewBuffer(reqPayload))
 		mux.ServeHTTP(bundle.recorder, req)
 
 		requireStatusAndJSONResponse(t, http.StatusCreated, &postResponse{ID: "123", Message: "Hello.", RawPayload: reqPayload}, bundle.recorder)
@@ -120,7 +120,7 @@ func TestMountAndServe(t *testing.T) {
 		mux := http.NewServeMux()
 		Mount(mux, &getEndpoint{}, &MountOpts{Logger: bundle.logger})
 
-		req := httptest.NewRequest(http.MethodGet, "/api/get-endpoint", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/get-endpoint", nil)
 		mux.ServeHTTP(bundle.recorder, req)
 
 		requireStatusAndJSONResponse(t, http.StatusOK, &getResponse{Message: "Hello."}, bundle.recorder)
@@ -132,7 +132,7 @@ func TestMountAndServe(t *testing.T) {
 		mux, bundle := setup(t)
 
 		reqPayload := mustMarshalJSON(t, &postRequest{Message: "Hello."})
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123", bytes.NewBuffer(reqPayload))
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123", bytes.NewBuffer(reqPayload))
 		mux.ServeHTTP(bundle.recorder, req)
 
 		requireStatusAndJSONResponse(t, http.StatusCreated, &postResponse{ID: "123", Message: "Hello.", RawPayload: reqPayload}, bundle.recorder)
@@ -143,7 +143,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123", nil)
 		mux.ServeHTTP(bundle.recorder, req)
 
 		requireStatusAndJSONResponse(t, http.StatusBadRequest, &apierror.APIError{Message: "Field `message` is required."}, bundle.recorder)
@@ -154,7 +154,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123",
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123",
 			bytes.NewBuffer(mustMarshalJSON(t, &postRequest{MakeAPIError: true, Message: "Hello."})))
 		mux.ServeHTTP(bundle.recorder, req)
 
@@ -166,7 +166,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123",
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123",
 			bytes.NewBuffer(mustMarshalJSON(t, &postRequest{MakePostgresError: true, Message: "Hello."})))
 		mux.ServeHTTP(bundle.recorder, req)
 
@@ -194,7 +194,7 @@ func TestMountAndServe(t *testing.T) {
 
 		mux, bundle := setup(t)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/post-endpoint/123",
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/post-endpoint/123",
 			bytes.NewBuffer(mustMarshalJSON(t, &postRequest{MakeInternalError: true, Message: "Hello."})))
 		mux.ServeHTTP(bundle.recorder, req)
 
