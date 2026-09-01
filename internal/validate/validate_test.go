@@ -133,7 +133,7 @@ func TestPreferPublicNames(t *testing.T) {
 	}
 
 	require.Equal(t, "json_name",
-		preferPublicName(reflect.TypeOf(testStruct{}).Field(0)))
+		preferPublicName(reflect.TypeFor[testStruct]().Field(0)))
 	require.Equal(t, "StructNameField",
-		preferPublicName(reflect.TypeOf(testStruct{}).Field(1)))
+		preferPublicName(reflect.TypeFor[testStruct]().Field(1)))
 }

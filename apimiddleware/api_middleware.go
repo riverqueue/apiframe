@@ -2,6 +2,7 @@ package apimiddleware
 
 import (
 	"net/http"
+	"slices"
 )
 
 // middlewareInterface is an interface to be implemented by middleware.
@@ -61,8 +62,8 @@ func NewMiddlewareStack(middlewares ...middlewareInterface) *MiddlewareStack {
 }
 
 func (s *MiddlewareStack) Mount(handler http.Handler) http.Handler {
-	for i := len(s.middlewares) - 1; i >= 0; i-- {
-		handler = s.middlewares[i].Middleware(handler)
+	for _, v := range slices.Backward(s.middlewares) {
+		handler = v.Middleware(handler)
 	}
 
 	return handler

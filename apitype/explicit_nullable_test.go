@@ -90,13 +90,13 @@ func TestExtractExplicitNullableValueForValidation(t *testing.T) {
 		},
 		{
 			name:    "EmptyStringValue",
-			input:   ExplicitNullable[string]{Set: true, Value: ptr("")},
-			wantVal: ptr(""),
+			input:   ExplicitNullable[string]{Set: true, Value: new("")},
+			wantVal: new(""),
 		},
 		{
 			name:    "NonEmptyStringValue",
-			input:   ExplicitNullable[string]{Set: true, Value: ptr("test")},
-			wantVal: ptr("test"),
+			input:   ExplicitNullable[string]{Set: true, Value: new("test")},
+			wantVal: new("test"),
 		},
 	}
 
@@ -142,12 +142,12 @@ func TestExplicitNullable_UnmarshalJSON(t *testing.T) {
 		{
 			name: "EmptyString",
 			json: `{"label":""}`,
-			want: ExplicitNullable[string]{Set: true, Value: ptr("")},
+			want: ExplicitNullable[string]{Set: true, Value: new("")},
 		},
 		{
 			name: "NonEmptyString",
 			json: `{"label":"test"}`,
-			want: ExplicitNullable[string]{Set: true, Value: ptr("test")},
+			want: ExplicitNullable[string]{Set: true, Value: new("test")},
 		},
 		{
 			name:    "InvalidJSON",
@@ -173,8 +173,4 @@ func TestExplicitNullable_UnmarshalJSON(t *testing.T) {
 			require.Equal(t, tt.want, got.Label)
 		})
 	}
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

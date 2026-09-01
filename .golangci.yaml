@@ -8,16 +8,19 @@ linters:
     - wrapcheck # checks that errors are wrapped; currently not done anywhere
 
     # disabled because we're not compliant, but which we should think about
-    - exhaustruct # checks that properties in structs are exhaustively defined; may be a good idea
+    - exhaustruct # deprecated predecessor to exhaustruct_v5
+    - exhaustruct_v5 # checks that properties in structs are exhaustively defined; may be a good idea
     - testpackage # requires tests in test packages like `river_test`
 
     # disabled because they're annoying/bad
     - cyclop # screams into the void at "cyclomatic complexity"
     - funlen # screams when functions are more than 60 lines long; what are we even doing here guys
+    - goconst # wants repeated test strings and other obvious literals to be constants; lots of churn.
     - interfacebloat # we do in fact want >10 methods on the Adapter interface or wherever we see fit.
     - gocognit # yells that "cognitive complexity" is too high; why
     - gocyclo # ANOTHER "cyclomatic complexity" checker (see also "cyclop" and "gocyclo")
     - godox # bans TODO statements; total non-starter at the moment
+    - gomodguard # deprecated alias replaced by gomodguard_v2
     - err113 # wants all errors to be defined as variables at the package level; quite obnoxious
     - maintidx # ANOTHER ANOTHER "cyclomatic complexity" lint (see also "cyclop" and "gocyclo")
     - mnd # detects "magic numbers", which it defines as any number; annoying
@@ -27,6 +30,7 @@ linters:
     - nlreturn # requires a blank line before returns; annoying
     - noinlineerr # disallows `if err := ...`; because why miss an opportunity to leak variables out of scope?
     - wsl # a bunch of style/whitespace stuff; annoying
+    - wsl_v5 # a second version of the first annoying wsl; how nice
 
   settings:
     depguard:
