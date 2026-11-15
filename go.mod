@@ -2,6 +2,8 @@ module github.com/riverqueue/apiframe
 
 go 1.26.0
 
+toolchain go1.27.4
+
 require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
