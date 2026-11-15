@@ -6,6 +6,9 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
@@ -26,10 +29,11 @@ jobs:
       - name: Test
         run: make test
 
-  golangci-lint:
+  go_compatibility:
     runs-on: ubuntu-latest
     env:
-      GOLANGCI_LINT_VERSION: v2.13.1
+      # Verify the oldest supported Go version without a toolchain upgrade.
+      GOTOOLCHAIN: local
 
     steps:
       - name: Checkout
@@ -39,7 +43,28 @@ jobs:
         uses: actions/setup-go@v7
         with:
           check-latest: true
-          go-version: "stable"
+          go-version: "1.26"
+
+      - name: Display Go version
+        run: go version
+
+      - name: Test
+        run: make test
+
+  golangci-lint:
+    runs-on: ubuntu-latest
+    env:
+      GOLANGCI_LINT_VERSION: v2.15.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          check-latest: true
+          go-version-file: "go.mod"
 
       - name: Lint
         uses: golangci/golangci-lint-action@v9
